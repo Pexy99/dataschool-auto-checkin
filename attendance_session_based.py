@@ -171,6 +171,26 @@ def fetch_attendance_summary(
     return match.group(1), match.group(2), match.group(3)
 
 
+def build_friday_summary_message(
+    opener: urllib.request.OpenerDirector,
+    str_code: str,
+    base_message: str,
+) -> str:
+    if dt.date.today().weekday() != 4:
+        return base_message
+    start_day = (dt.date.today() - dt.timedelta(days=4)).isoformat()
+    end_day = dt.date.today().isoformat()
+    summary = fetch_attendance_summary(opener, str_code, NAME, start_day, end_day)
+    if not summary:
+        return base_message
+    training_days, attendance_days, attendance_rate = summary
+    return (
+        base_message
+        + f'\n최근 5일 출결: 훈련일수 {training_days}일 / '
+        + f'출석일수 {attendance_days}일 / 출석률 {attendance_rate}%'
+    )
+
+
 def finish(message: str, *, popup: bool) -> int:
     print(message)
     if popup:
@@ -207,7 +227,8 @@ def main() -> int:
     if args.action == 'in' and before_in:
         return finish(f'{before_in} 입실 이미 처리됨', popup=not args.no_popup)
     if args.action == 'out' and before_out:
-        return finish(f'{before_out} 퇴실 이미 처리됨', popup=not args.no_popup)
+        message = build_friday_summary_message(opener, str_code, f'{before_out} 퇴실 이미 처리됨')
+        return finish(message, popup=not args.no_popup)
 
     result = run_action(opener, args.action, str_code).strip()
     print(f'action_result={result or "-"}')
@@ -218,16 +239,8 @@ def main() -> int:
 
     if final_time:
         message = f'{final_time} {action_label} 완료'
-        if args.action == 'out' and dt.date.today().weekday() == 4:
-            start_day = (dt.date.today() - dt.timedelta(days=4)).isoformat()
-            end_day = dt.date.today().isoformat()
-            summary = fetch_attendance_summary(opener, str_code, NAME, start_day, end_day)
-            if summary:
-                training_days, attendance_days, attendance_rate = summary
-                message += (
-                    f'\n최근 5일 출결: 훈련일수 {training_days}일 / '
-                    f'출석일수 {attendance_days}일 / 출석률 {attendance_rate}%'
-                )
+        if args.action == 'out':
+            message = build_friday_summary_message(opener, str_code, message)
         return finish(message, popup=not args.no_popup)
     return finish(f'{action_label} 처리 결과 확인 필요 (응답: {result or "-"})', popup=not args.no_popup)
 
