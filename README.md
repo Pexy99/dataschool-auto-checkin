@@ -5,6 +5,7 @@
 - `run_checkin.bat`: 입실 수동 실행
 - `run_checkout.bat`: 퇴실 수동 실행
 - `register_tasks.bat`: 작업 스케줄러 자동 등록
+- `remove_tasks.bat`: 등록된 작업 스케줄러 삭제
 - `skip_dates.txt`: 예외일 목록
 
 ## 사용 전 설정
@@ -19,6 +20,11 @@
   - `DataSchool Check-in` → 기본 08:55
   - `DataSchool Check-out` → 기본 17:55
 - 시간은 작업 스케줄러에서 자유롭게 수정 가능합니다.
+
+## 작업 스케줄러 삭제
+- `remove_tasks.bat`를 실행하면 아래 2개 작업이 삭제됩니다.
+  - `DataSchool Check-in`
+  - `DataSchool Check-out`
 
 ## 동작 방식
 - 실행 후 로그인 세션을 만든 뒤 입실/퇴실 요청
