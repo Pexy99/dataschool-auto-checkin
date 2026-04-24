@@ -23,7 +23,7 @@
   - `DataSchool Mid-Attendance` → 기본 15:30
   - `DataSchool Check-out` → 기본 17:55
 - `register_tasks.bat` 상단의 시간 변수를 수정해서 원하는 시간으로 등록할 수 있습니다.
-- 중간출결은 `mid_attendance.py` 내부에서 기본 15:30~16:30, 30초 간격으로 동작합니다.
+- 중간출결 시작/종료 시각과 반복 간격도 `register_tasks.bat` 상단 변수로 조정할 수 있습니다.
 - 작업 스케줄러에서 나중에 다시 수정해도 됩니다.
 
 ## 작업 스케줄러 삭제

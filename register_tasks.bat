@@ -6,6 +6,8 @@ REM You can change the default times below.
 set CHECKIN_TIME=08:55
 set CHECKOUT_TIME=17:55
 set MID_ATTENDANCE_START=15:30
+set MID_ATTENDANCE_END=16:30
+set MID_ATTENDANCE_POLL=30
 
 echo [1/3] Registering check-in task...
 schtasks /Create /F /TN "DataSchool Check-in" /SC DAILY /ST %CHECKIN_TIME% /TR "cmd /c cd /d %~dp0 && py -3 attendance_session_based.py --action in"
@@ -16,7 +18,7 @@ if errorlevel 1 (
 )
 
 echo [2/3] Registering mid-attendance task...
-schtasks /Create /F /TN "DataSchool Mid-Attendance" /SC DAILY /ST %MID_ATTENDANCE_START% /TR "cmd /c cd /d %~dp0 && py -3 mid_attendance.py"
+schtasks /Create /F /TN "DataSchool Mid-Attendance" /SC DAILY /ST %MID_ATTENDANCE_START% /TR "cmd /c cd /d %~dp0 && py -3 mid_attendance.py --start-time %MID_ATTENDANCE_START% --end-time %MID_ATTENDANCE_END% --poll-seconds %MID_ATTENDANCE_POLL%"
 if errorlevel 1 (
   echo Failed to register mid-attendance task.
   pause
@@ -35,8 +37,9 @@ echo.
 echo Done.
 echo Registered check-in time      : %CHECKIN_TIME%
 echo Registered mid-attendance time: %MID_ATTENDANCE_START%
+echo Mid-attendance end time     : %MID_ATTENDANCE_END%
+echo Mid-attendance poll seconds : %MID_ATTENDANCE_POLL%
 echo Registered check-out time     : %CHECKOUT_TIME%
-echo Mid-attendance runs from 15:30 to 16:30 by default inside the Python script.
 echo You can change the values at the top of this file before running it.
 echo You can also change the times later in Task Scheduler.
 pause
