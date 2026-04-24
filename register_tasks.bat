@@ -9,10 +9,10 @@ set MID_ATTENDANCE_START=15:30
 set MID_ATTENDANCE_END=16:30
 set MID_ATTENDANCE_POLL=30
 
-findstr /C:"NAME = '본인 이름 입력'" attendance_session_based.py >nul && goto config_error
-findstr /C:"PASSWORD = '본인 비밀번호 입력'" attendance_session_based.py >nul && goto config_error
-findstr /C:"NAME = '본인 이름 입력'" mid_attendance.py >nul && goto config_error
-findstr /C:"PASSWORD = '본인 비밀번호 입력'" mid_attendance.py >nul && goto config_error
+findstr /R /C:"^NAME = ''$" attendance_session_based.py >nul && goto config_error
+findstr /R /C:"^PASSWORD = ''$" attendance_session_based.py >nul && goto config_error
+findstr /R /C:"^NAME = ''$" mid_attendance.py >nul && goto config_error
+findstr /R /C:"^PASSWORD = ''$" mid_attendance.py >nul && goto config_error
 
 echo [1/3] Registering check-in task...
 schtasks /Create /F /TN "DataSchool Check-in" /SC DAILY /ST %CHECKIN_TIME% /TR "cmd /c cd /d %~dp0 && py -3 attendance_session_based.py --action in"
@@ -45,13 +45,10 @@ echo Registered mid-attendance time: %MID_ATTENDANCE_START%
 echo Mid-attendance end time       : %MID_ATTENDANCE_END%
 echo Mid-attendance poll seconds   : %MID_ATTENDANCE_POLL%
 echo Registered check-out time     : %CHECKOUT_TIME%
-echo You can change the values at the top of this file before running it.
-echo You can also change the times later in Task Scheduler.
 pause
 exit /b 0
 
 :config_error
-echo Please edit attendance_session_based.py and mid_attendance.py first.
-echo Fill in NAME and PASSWORD before registering tasks.
+echo Please fill in NAME and PASSWORD in both Python files first.
 pause
 exit /b 1

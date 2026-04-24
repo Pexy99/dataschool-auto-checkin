@@ -7,13 +7,13 @@ import datetime as dt
 import json
 import sys
 import time
-import urllib.parse
 import urllib.request
 from pathlib import Path
 
 # ===== 사용자 설정 =====
-NAME = '본인 이름 입력'
-PASSWORD = '본인 비밀번호 입력'
+# 아래 두 값을 직접 입력하세요.
+NAME = ''
+PASSWORD = ''
 # ======================
 
 CODE_URL = 'https://msdataschool4.azurewebsites.net/api/code'
@@ -95,8 +95,8 @@ def main() -> int:
     parser.add_argument('--no-popup', action='store_true')
     args = parser.parse_args()
 
-    if NAME == '본인 이름 입력' or PASSWORD == '본인 비밀번호 입력':
-        return finish('사용 전 mid_attendance.py 상단의 NAME, PASSWORD를 수정하세요.', popup=not args.no_popup)
+    if not NAME or not PASSWORD:
+        return finish('mid_attendance.py 상단의 NAME, PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
 
     today = today_local()
     if today.isoformat() in load_skip_dates():

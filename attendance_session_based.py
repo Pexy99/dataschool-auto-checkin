@@ -13,8 +13,9 @@ import urllib.request
 from pathlib import Path
 
 # ===== 사용자 설정 =====
-NAME = '본인 이름 입력'
-PASSWORD = '본인 비밀번호 입력'
+# 아래 두 값을 직접 입력하세요.
+NAME = ''
+PASSWORD = ''
 STR_CCODE = 'W260315002'
 # ======================
 
@@ -204,8 +205,8 @@ def main() -> int:
     parser.add_argument('--no-popup', action='store_true')
     args = parser.parse_args()
 
-    if NAME == '본인 이름 입력' or PASSWORD == '본인 비밀번호 입력':
-        return finish('사용 전 attendance_session_based.py 상단의 NAME, PASSWORD를 수정하세요.', popup=not args.no_popup)
+    if not NAME or not PASSWORD:
+        return finish('attendance_session_based.py 상단의 NAME, PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
 
     today = today_local()
     if today in load_skip_dates():
