@@ -19,7 +19,8 @@
 - `register_tasks.bat`를 실행하면 아래 2개 작업이 등록됩니다.
   - `DataSchool Check-in` → 기본 08:55
   - `DataSchool Check-out` → 기본 17:55
-- 시간은 작업 스케줄러에서 자유롭게 수정 가능합니다.
+- `register_tasks.bat` 상단의 시간 변수를 수정해서 원하는 시간으로 등록할 수 있습니다.
+- 작업 스케줄러에서 나중에 다시 수정해도 됩니다.
 
 ## 작업 스케줄러 삭제
 - `remove_tasks.bat`를 실행하면 아래 2개 작업이 삭제됩니다.
