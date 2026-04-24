@@ -2,8 +2,10 @@
 
 ## 포함 파일
 - `attendance_session_based.py`: 세션 기반 입퇴실 스크립트
+- `mid_attendance.py`: 중간출결 스크립트
 - `run_checkin.bat`: 입실 수동 실행
 - `run_checkout.bat`: 퇴실 수동 실행
+- `run_mid_attendance.bat`: 중간출결 수동 실행
 - `register_tasks.bat`: 작업 스케줄러 자동 등록
 - `remove_tasks.bat`: 등록된 작업 스케줄러 삭제
 - `skip_dates.txt`: 예외일 목록
@@ -16,15 +18,18 @@
 3. 필요하면 `skip_dates.txt`에 `YYYY-MM-DD` 형식으로 예외일 추가
 
 ## 작업 스케줄러 등록
-- `register_tasks.bat`를 실행하면 아래 2개 작업이 등록됩니다.
+- `register_tasks.bat`를 실행하면 아래 3개 작업이 등록됩니다.
   - `DataSchool Check-in` → 기본 08:55
+  - `DataSchool Mid-Attendance` → 기본 15:30
   - `DataSchool Check-out` → 기본 17:55
 - `register_tasks.bat` 상단의 시간 변수를 수정해서 원하는 시간으로 등록할 수 있습니다.
+- 중간출결은 `mid_attendance.py` 내부에서 기본 15:30~16:30, 30초 간격으로 동작합니다.
 - 작업 스케줄러에서 나중에 다시 수정해도 됩니다.
 
 ## 작업 스케줄러 삭제
-- `remove_tasks.bat`를 실행하면 아래 2개 작업이 삭제됩니다.
+- `remove_tasks.bat`를 실행하면 아래 3개 작업이 삭제됩니다.
   - `DataSchool Check-in`
+  - `DataSchool Mid-Attendance`
   - `DataSchool Check-out`
 
 ## 동작 방식
