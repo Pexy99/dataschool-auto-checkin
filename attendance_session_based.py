@@ -26,6 +26,7 @@ PRESENT_PAGE = BASE + 'present/presentD.asp'
 PRESENT_IN_URL = BASE + 'present/PresentIn_ok.asp'
 PRESENT_OUT_URL = BASE + 'present/PresentOut_ok.asp'
 ROLLBOOK_URL = BASE + 'present/PresentRollBookChk.asp'
+SUMMARY_URL = BASE + '_popup/student/_stuPresentList.asp'
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36'
 SKIP_DATES_PATH = Path(__file__).with_name('skip_dates.txt')
 
@@ -135,6 +136,41 @@ def run_action(opener: urllib.request.OpenerDirector, action: str, str_code: str
     return fetch_text(opener, url + '?' + query, headers={'Referer': PRESENT_PAGE + f'?strCode={str_code}&strCCode={STR_CCODE}'})
 
 
+def fetch_attendance_summary(
+    opener: urllib.request.OpenerDirector,
+    str_code: str,
+    name: str,
+    start_day: str,
+    end_day: str,
+) -> tuple[str, str, str] | None:
+    params = urllib.parse.urlencode(
+        {
+            'strCCode': STR_CCODE,
+            'strCode': str_code,
+            'Sday1': start_day,
+            'Sday2': end_day,
+        }
+    )
+    html = fetch_text(opener, SUMMARY_URL + '?' + params)
+    import re
+
+    pattern = re.compile(
+        rf'<td[^>]*>\s*<center>{re.escape(name)}</center>\s*</td>\s*'
+        r'<td[^>]*>\s*<center>(\d+)</center>\s*</td>\s*'
+        r'<td[^>]*>\s*<center>(\d+)</center>\s*</td>\s*'
+        r'<td[^>]*>\s*<center>\d+</center>\s*</td>\s*'
+        r'<td[^>]*>\s*<center>\d+</center>\s*</td>\s*'
+        r'<td[^>]*>\s*<center>\d+</center>\s*</td>\s*'
+        r'<td[^>]*>\s*<center>\d+</center>\s*</td>\s*'
+        r'<td[^>]*>\s*<center>([0-9.]+)</center>\s*</td>',
+        re.S,
+    )
+    match = pattern.search(html)
+    if not match:
+        return None
+    return match.group(1), match.group(2), match.group(3)
+
+
 def finish(message: str, *, popup: bool) -> int:
     print(message)
     if popup:
@@ -181,7 +217,18 @@ def main() -> int:
     action_label = '입실' if args.action == 'in' else '퇴실'
 
     if final_time:
-        return finish(f'{final_time} {action_label} 완료', popup=not args.no_popup)
+        message = f'{final_time} {action_label} 완료'
+        if args.action == 'out' and dt.date.today().weekday() == 4:
+            start_day = (dt.date.today() - dt.timedelta(days=4)).isoformat()
+            end_day = dt.date.today().isoformat()
+            summary = fetch_attendance_summary(opener, str_code, NAME, start_day, end_day)
+            if summary:
+                training_days, attendance_days, attendance_rate = summary
+                message += (
+                    f'\n최근 5일 출결: 훈련일수 {training_days}일 / '
+                    f'출석일수 {attendance_days}일 / 출석률 {attendance_rate}%'
+                )
+        return finish(message, popup=not args.no_popup)
     return finish(f'{action_label} 처리 결과 확인 필요 (응답: {result or "-"})', popup=not args.no_popup)
 
 
