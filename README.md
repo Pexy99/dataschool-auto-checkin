@@ -46,9 +46,12 @@ PASSWORD = '1234'
 ## 4. 수동 실행
 직접 테스트하고 싶으면 아래 파일을 실행하면 됩니다.
 
+`check_tasks.bat`를 실행하면 현재 등록된 작업 정보를 확인할 수 있습니다.
+
 - `run_checkin.bat`
 - `run_mid_attendance.bat`
 - `run_checkout.bat`
+- `check_tasks.bat`
 
 ## 5. 실행 결과
 - 입실 성공 시: `08:55 입실 완료`
