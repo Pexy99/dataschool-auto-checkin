@@ -64,12 +64,12 @@ def fetch_json(url: str, *, data: bytes | None = None) -> tuple[int, dict]:
         return e.code, read_json_response(e)
 
 
-def fetch_code() -> str:
+def fetch_code_info() -> dict:
     status, data = fetch_json(CODE_URL)
     if status != 200:
         message = str(data.get('message', '')).strip() or f'코드 조회 실패: HTTP {status}'
         raise RuntimeError(message)
-    return str(data.get('code', '')).strip()
+    return data
 
 
 def submit_attendance(name: str, password: str, code: str) -> tuple[int, dict]:
@@ -142,21 +142,32 @@ def main() -> int:
     last_message = ''
     while dt.datetime.now() <= end_dt:
         try:
-            code = fetch_code()
+            info = fetch_code_info()
+            code = str(info.get('code') or '').strip()
+            is_expired = bool(info.get('isExpired'))
+            is_valid = bool(info.get('isValid'))
+            time_remaining = int(info.get('timeRemaining') or 0)
             print(f'code={code or "-"}')
-            if not code:
-                last_message = '출석 코드를 가져오지 못했습니다.'
+            print(f'is_valid={str(is_valid).lower()}')
+            print(f'is_expired={str(is_expired).lower()}')
+            print(f'time_remaining={time_remaining}')
+
+            if not code or is_expired or not is_valid or time_remaining <= 0:
+                last_message = '출석 코드가 아직 유효하지 않습니다.'
+                print(last_message)
+                time.sleep(max(args.poll_seconds, 1))
+                continue
+
+            status, result = submit_attendance(config.MID_ATTENDANCE_NAME, config.MID_ATTENDANCE_PASSWORD, code)
+            message = str(result.get('message', '')).strip() or str(result)
+            print(f'attendance_status={status}')
+            print(f'server_message={message}')
+            if 200 <= status < 300 and '출석이 확인되었습니다' in message:
+                return finish(f'중간출결 완료 ({code})', popup=not args.no_popup)
+            if status == 400 and ('유효' in message or '만료' in message or '코드' in message):
+                last_message = f'아직 유효하지 않은 코드: {message}'
             else:
-                status, result = submit_attendance(config.MID_ATTENDANCE_NAME, config.MID_ATTENDANCE_PASSWORD, code)
-                message = str(result.get('message', '')).strip() or str(result)
-                print(f'attendance_status={status}')
-                print(f'server_message={message}')
-                if 200 <= status < 300 and '출석이 확인되었습니다' in message:
-                    return finish(f'중간출결 완료 ({code})', popup=not args.no_popup)
-                if status == 400 and ('유효' in message or '만료' in message or '코드' in message):
-                    last_message = f'아직 유효하지 않은 코드: {message}'
-                else:
-                    last_message = message
+                last_message = message
         except Exception as e:
             last_message = f'오류: {e}'
             print(last_message)
