@@ -39,6 +39,7 @@ PASSWORD = '1234'
 - 퇴실: `17:55`
 
 시간을 바꾸고 싶으면 `register_tasks.bat` 상단 변수만 수정한 뒤 실행하면 됩니다.
+등록 상태 확인은 `check_tasks.bat`를 실행하면 됩니다.
 
 ## 3. 자동화 삭제
 등록된 작업을 지우고 싶으면 `remove_tasks.bat`를 실행하면 됩니다.
