@@ -5,6 +5,7 @@ import argparse
 import ctypes
 import datetime as dt
 import json
+import random
 import sys
 import time
 import urllib.request
@@ -19,7 +20,8 @@ import config
 CODE_URL = 'https://msdataschool4.azurewebsites.net/api/code'
 ATTENDANCE_URL = 'https://msdataschool4.azurewebsites.net/api/attendance'
 SKIP_DATES_PATH = ROOT / 'skip_dates.txt'
-POLL_SECONDS = 30
+POLL_SECONDS = 45
+RANDOM_DELAY_SECONDS = 10
 DEFAULT_START_TIME = '15:30'
 DEFAULT_END_TIME = '16:30'
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36'
@@ -92,6 +94,7 @@ def main() -> int:
     parser.add_argument('--start-time', default=DEFAULT_START_TIME)
     parser.add_argument('--end-time', default=DEFAULT_END_TIME)
     parser.add_argument('--poll-seconds', type=int, default=POLL_SECONDS)
+    parser.add_argument('--random-delay-seconds', type=int, default=RANDOM_DELAY_SECONDS)
     parser.add_argument('--no-popup', action='store_true')
     args = parser.parse_args()
 
@@ -112,6 +115,11 @@ def main() -> int:
         wait_seconds = int((start_dt - now).total_seconds())
         print(f'start_wait_seconds={wait_seconds}')
         time.sleep(max(wait_seconds, 0))
+
+    if args.random_delay_seconds > 0:
+        delay = random.randint(0, args.random_delay_seconds)
+        print(f'random_delay_seconds={delay}')
+        time.sleep(delay)
 
     last_message = ''
     while dt.datetime.now() <= end_dt:

@@ -11,12 +11,14 @@ for /f "usebackq delims=" %%A in (`py -3 src\config_value.py CHECKIN_TIME`) do s
 for /f "usebackq delims=" %%A in (`py -3 src\config_value.py MID_ATTENDANCE_START`) do set MID_ATTENDANCE_START=%%A
 for /f "usebackq delims=" %%A in (`py -3 src\config_value.py MID_ATTENDANCE_END`) do set MID_ATTENDANCE_END=%%A
 for /f "usebackq delims=" %%A in (`py -3 src\config_value.py MID_ATTENDANCE_POLL_SECONDS`) do set MID_ATTENDANCE_POLL=%%A
+for /f "usebackq delims=" %%A in (`py -3 src\config_value.py MID_ATTENDANCE_RANDOM_DELAY_SECONDS`) do set MID_ATTENDANCE_RANDOM_DELAY=%%A
 for /f "usebackq delims=" %%A in (`py -3 src\config_value.py CHECKOUT_TIME`) do set CHECKOUT_TIME=%%A
 
 if "%CHECKIN_TIME%"=="" goto config_error
 if "%MID_ATTENDANCE_START%"=="" goto config_error
 if "%MID_ATTENDANCE_END%"=="" goto config_error
 if "%MID_ATTENDANCE_POLL%"=="" goto config_error
+if "%MID_ATTENDANCE_RANDOM_DELAY%"=="" goto config_error
 if "%CHECKOUT_TIME%"=="" goto config_error
 
 echo [1/3] Registering check-in task...
@@ -28,7 +30,7 @@ if errorlevel 1 (
 )
 
 echo [2/3] Registering mid-attendance task...
-schtasks /Create /F /TN "DataSchool Mid-Attendance" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST %MID_ATTENDANCE_START% /TR "cmd /c cd /d %~dp0 && py -3 src\mid_attendance.py --start-time %MID_ATTENDANCE_START% --end-time %MID_ATTENDANCE_END% --poll-seconds %MID_ATTENDANCE_POLL%"
+schtasks /Create /F /TN "DataSchool Mid-Attendance" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST %MID_ATTENDANCE_START% /TR "cmd /c cd /d %~dp0 && py -3 src\mid_attendance.py --start-time %MID_ATTENDANCE_START% --end-time %MID_ATTENDANCE_END% --poll-seconds %MID_ATTENDANCE_POLL% --random-delay-seconds %MID_ATTENDANCE_RANDOM_DELAY%"
 if errorlevel 1 (
   echo Failed to register mid-attendance task.
   pause
@@ -49,6 +51,7 @@ echo Registered check-in time      : %CHECKIN_TIME%
 echo Registered mid-attendance time: %MID_ATTENDANCE_START%
 echo Mid-attendance end time       : %MID_ATTENDANCE_END%
 echo Mid-attendance poll seconds   : %MID_ATTENDANCE_POLL%
+echo Mid-attendance random delay    : 0-%MID_ATTENDANCE_RANDOM_DELAY% seconds
 echo Registered check-out time     : %CHECKOUT_TIME%
 pause
 exit /b 0
