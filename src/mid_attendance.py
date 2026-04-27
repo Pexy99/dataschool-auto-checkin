@@ -152,6 +152,8 @@ def main() -> int:
             print(f'is_expired={str(is_expired).lower()}')
             print(f'time_remaining={time_remaining}')
 
+            # Safety: never submit attendance unless /api/code explicitly says the code is valid.
+            # This prevents unnecessary/wrong /api/attendance calls for expired or invalid codes.
             if not code or is_expired or not is_valid or time_remaining <= 0:
                 last_message = '출석 코드가 아직 유효하지 않습니다.'
                 print(last_message)
