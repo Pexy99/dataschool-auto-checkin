@@ -162,7 +162,7 @@ def build_friday_summary_message(opener: urllib.request.OpenerDirector, str_code
         return base_message
     start_day = (dt.date.today() - dt.timedelta(days=4)).isoformat()
     end_day = dt.date.today().isoformat()
-    summary = fetch_attendance_summary(opener, str_code, config.NAME, start_day, end_day)
+    summary = fetch_attendance_summary(opener, str_code, config.LMS_NAME, start_day, end_day)
     if not summary:
         return base_message
     training_days, attendance_days, attendance_rate = summary
@@ -182,24 +182,24 @@ def main() -> int:
     parser.add_argument('--no-popup', action='store_true')
     args = parser.parse_args()
 
-    if not config.NAME or not config.PASSWORD:
-        return finish('config.py의 NAME, PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
+    if not config.LMS_NAME or not config.LMS_PASSWORD:
+        return finish('config.py의 LMS_NAME, LMS_PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
 
     today = today_local()
     if today in load_skip_dates():
         return finish(f'{today} 예외일이라 스킵', popup=not args.no_popup)
 
     opener = build_opener()
-    str_code = find_str_code(opener, config.NAME)
+    str_code = find_str_code(opener, config.LMS_NAME)
     print(f'str_code={str_code}')
 
     bootstrap_login_session(opener)
-    login_result = login(opener, config.NAME, str_code, config.PASSWORD)
+    login_result = login(opener, config.LMS_NAME, str_code, config.LMS_PASSWORD)
     login_failed = '로그인 실패' in login_result or '아이디 또는 비밀번호' in login_result
     if login_failed:
         return finish('로그인 실패', popup=not args.no_popup)
 
-    open_present_page(opener, str_code, config.NAME)
+    open_present_page(opener, str_code, config.LMS_NAME)
     before_in, before_out = get_rollbook(opener, str_code)
 
     if args.action == 'in' and before_in:

@@ -1,18 +1,29 @@
 # DataSchool Auto Check-in
 
 ## 1. 수정할 파일
-먼저 `config.py` 파일만 열어서 이름과 비밀번호를 입력하세요.
+먼저 `config.py` 파일만 열어서 필요한 값을 입력하세요.
 
+### LMS 입실/퇴실 사이트
 ```python
-NAME = ''
-PASSWORD = ''
+LMS_NAME = ''
+LMS_PASSWORD = ''
 ```
 
-예:
-
+### 중간출결 사이트
 ```python
-NAME = '홍길동'
-PASSWORD = '1234'
+MID_ATTENDANCE_NAME = ''
+MID_ATTENDANCE_PASSWORD = ''
+```
+
+둘 다 같은 이름/비밀번호를 쓰면 같은 값을 입력하면 됩니다.
+
+### 자동화 시간
+```python
+CHECKIN_TIME = '08:55'
+MID_ATTENDANCE_START = '15:30'
+MID_ATTENDANCE_END = '16:30'
+MID_ATTENDANCE_POLL_SECONDS = 30
+CHECKOUT_TIME = '17:55'
 ```
 
 필요하면 `skip_dates.txt`에 쉬는 날짜를 추가하세요.
@@ -25,15 +36,7 @@ PASSWORD = '1234'
 ## 2. 자동화 등록
 `register_tasks.bat`를 실행하면 작업 스케줄러에 월~금 자동 등록됩니다.
 
-기본 등록 시간:
-- 평일(월~금) 기준으로 등록됩니다.
-- 입실: `08:55`
-- 중간출결 시작: `15:30`
-- 중간출결 종료: `16:30`
-- 중간출결 간격: `30초`
-- 퇴실: `17:55`
-
-시간을 바꾸고 싶으면 `register_tasks.bat` 상단 변수만 수정한 뒤 실행하면 됩니다.
+등록 시간은 `config.py`의 시간 설정을 사용합니다.
 등록 상태 확인은 `check_tasks.bat`를 실행하면 됩니다.
 
 ## 3. 자동화 삭제

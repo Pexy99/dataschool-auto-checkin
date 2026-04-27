@@ -2,15 +2,22 @@
 setlocal
 cd /d %~dp0
 
-REM You can change the default times below.
-set CHECKIN_TIME=08:55
-set CHECKOUT_TIME=17:55
-set MID_ATTENDANCE_START=15:30
-set MID_ATTENDANCE_END=16:30
-set MID_ATTENDANCE_POLL=30
+findstr /R /C:"^LMS_NAME = ''$" config.py >nul && goto config_error
+findstr /R /C:"^LMS_PASSWORD = ''$" config.py >nul && goto config_error
+findstr /R /C:"^MID_ATTENDANCE_NAME = ''$" config.py >nul && goto config_error
+findstr /R /C:"^MID_ATTENDANCE_PASSWORD = ''$" config.py >nul && goto config_error
 
-findstr /R /C:"^NAME = ''$" config.py >nul && goto config_error
-findstr /R /C:"^PASSWORD = ''$" config.py >nul && goto config_error
+for /f "usebackq delims=" %%A in (`py -3 src\config_value.py CHECKIN_TIME`) do set CHECKIN_TIME=%%A
+for /f "usebackq delims=" %%A in (`py -3 src\config_value.py MID_ATTENDANCE_START`) do set MID_ATTENDANCE_START=%%A
+for /f "usebackq delims=" %%A in (`py -3 src\config_value.py MID_ATTENDANCE_END`) do set MID_ATTENDANCE_END=%%A
+for /f "usebackq delims=" %%A in (`py -3 src\config_value.py MID_ATTENDANCE_POLL_SECONDS`) do set MID_ATTENDANCE_POLL=%%A
+for /f "usebackq delims=" %%A in (`py -3 src\config_value.py CHECKOUT_TIME`) do set CHECKOUT_TIME=%%A
+
+if "%CHECKIN_TIME%"=="" goto config_error
+if "%MID_ATTENDANCE_START%"=="" goto config_error
+if "%MID_ATTENDANCE_END%"=="" goto config_error
+if "%MID_ATTENDANCE_POLL%"=="" goto config_error
+if "%CHECKOUT_TIME%"=="" goto config_error
 
 echo [1/3] Registering check-in task...
 schtasks /Create /F /TN "DataSchool Check-in" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST %CHECKIN_TIME% /TR "cmd /c cd /d %~dp0 && py -3 src\attendance.py --action in"
@@ -47,6 +54,7 @@ pause
 exit /b 0
 
 :config_error
-echo Please fill in NAME and PASSWORD in config.py first.
+echo Please fill in LMS and mid-attendance settings in config.py first.
+echo Also check schedule time values in config.py.
 pause
 exit /b 1

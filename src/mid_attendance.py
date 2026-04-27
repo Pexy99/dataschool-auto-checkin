@@ -95,8 +95,8 @@ def main() -> int:
     parser.add_argument('--no-popup', action='store_true')
     args = parser.parse_args()
 
-    if not config.NAME or not config.PASSWORD:
-        return finish('config.py의 NAME, PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
+    if not config.MID_ATTENDANCE_NAME or not config.MID_ATTENDANCE_PASSWORD:
+        return finish('config.py의 MID_ATTENDANCE_NAME, MID_ATTENDANCE_PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
 
     today = today_local()
     if today.isoformat() in load_skip_dates():
@@ -121,7 +121,7 @@ def main() -> int:
             if not code:
                 last_message = '출석 코드를 가져오지 못했습니다.'
             else:
-                result = submit_attendance(config.NAME, config.PASSWORD, code)
+                result = submit_attendance(config.MID_ATTENDANCE_NAME, config.MID_ATTENDANCE_PASSWORD, code)
                 message = str(result.get('message', '')).strip() or str(result)
                 print(f'server_message={message}')
                 if '출석이 확인되었습니다' in message:
