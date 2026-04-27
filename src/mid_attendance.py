@@ -132,6 +132,8 @@ def main() -> int:
         print(f'start_wait_seconds={wait_seconds}')
         time.sleep(max(wait_seconds, 0))
 
+    print(f'중간출결을 시작합니다. ({args.start_time}~{args.end_time}, {args.poll_seconds}초 간격)')
+
     if args.random_delay_seconds > 0:
         delay = random.randint(0, args.random_delay_seconds)
         print(f'random_delay_seconds={delay}')
