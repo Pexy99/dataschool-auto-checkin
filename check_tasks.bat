@@ -1,21 +1,28 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-"$names = @('DataSchool Check-in','DataSchool Mid-Attendance','DataSchool Check-out'); ^
-Write-Host 'DataSchool scheduled tasks'; ^
-Write-Host '----------------------------------------'; ^
-foreach ($name in $names) { ^
-  $task = Get-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue; ^
-  if ($null -eq $task) { ^
-    Write-Host ($name + ' : NOT FOUND'); ^
-  } else { ^
-    $info = Get-ScheduledTaskInfo -TaskName $name; ^
-    $trigger = @($task.Triggers)[0]; ^
-    if ($trigger -and $trigger.StartBoundary) { $start = ([datetime]$trigger.StartBoundary).ToString('HH:mm') } else { $start = '-' }; ^
-    if ($info.NextRunTime) { $next = $info.NextRunTime.ToString('yyyy-MM-dd HH:mm') } else { $next = '-' }; ^
-    Write-Host ($name + ' | Start=' + $start + ' | Next=' + $next + ' | State=' + $task.State); ^
-  } ^
-}"
-
+call :show "DataSchool Check-in" "Check-in"
+call :show "DataSchool Mid-Attendance" "Mid-Attendance"
+call :show "DataSchool Check-out" "Check-out"
 pause
+exit /b 0
+
+:show
+set "TASK_NAME=%~1"
+set "LABEL=%~2"
+set "FOUND=0"
+
+for /f "usebackq tokens=1-3 delims=," %%A in (`schtasks /Query /TN "%TASK_NAME%" /FO CSV /NH 2^>nul`) do (
+  set "FOUND=1"
+  set "TASK=%%~A"
+  set "NEXT=%%~B"
+  set "STATUS=%%~C"
+)
+
+if "%FOUND%"=="0" (
+  echo %LABEL%: NOT FOUND
+  goto :eof
+)
+
+echo %LABEL%: Next=!NEXT! Status=!STATUS!
+goto :eof
