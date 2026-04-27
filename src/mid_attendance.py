@@ -8,6 +8,7 @@ import json
 import random
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -46,19 +47,32 @@ def load_skip_dates() -> set[str]:
     }
 
 
-def fetch_json(url: str, *, data: bytes | None = None) -> dict:
+def read_json_response(resp) -> dict:
+    raw = resp.read().decode('utf-8', errors='replace')
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return {'message': raw}
+
+
+def fetch_json(url: str, *, data: bytes | None = None) -> tuple[int, dict]:
     req = urllib.request.Request(url, data=data, headers={'User-Agent': USER_AGENT})
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        raw = resp.read().decode('utf-8', errors='replace')
-    return json.loads(raw)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return resp.status, read_json_response(resp)
+    except urllib.error.HTTPError as e:
+        return e.code, read_json_response(e)
 
 
 def fetch_code() -> str:
-    data = fetch_json(CODE_URL)
+    status, data = fetch_json(CODE_URL)
+    if status != 200:
+        message = str(data.get('message', '')).strip() or f'코드 조회 실패: HTTP {status}'
+        raise RuntimeError(message)
     return str(data.get('code', '')).strip()
 
 
-def submit_attendance(name: str, password: str, code: str) -> dict:
+def submit_attendance(name: str, password: str, code: str) -> tuple[int, dict]:
     body = json.dumps({'name': name, 'password': password, 'code': code}).encode('utf-8')
     req = urllib.request.Request(
         ATTENDANCE_URL,
@@ -68,9 +82,11 @@ def submit_attendance(name: str, password: str, code: str) -> dict:
             'Content-Type': 'application/json',
         },
     )
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        raw = resp.read().decode('utf-8', errors='replace')
-    return json.loads(raw)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return resp.status, read_json_response(resp)
+    except urllib.error.HTTPError as e:
+        return e.code, read_json_response(e)
 
 
 def parse_hhmm(value: str) -> tuple[int, int]:
@@ -129,12 +145,16 @@ def main() -> int:
             if not code:
                 last_message = '출석 코드를 가져오지 못했습니다.'
             else:
-                result = submit_attendance(config.MID_ATTENDANCE_NAME, config.MID_ATTENDANCE_PASSWORD, code)
+                status, result = submit_attendance(config.MID_ATTENDANCE_NAME, config.MID_ATTENDANCE_PASSWORD, code)
                 message = str(result.get('message', '')).strip() or str(result)
+                print(f'attendance_status={status}')
                 print(f'server_message={message}')
-                if '출석이 확인되었습니다' in message:
+                if 200 <= status < 300 and '출석이 확인되었습니다' in message:
                     return finish(f'중간출결 완료 ({code})', popup=not args.no_popup)
-                last_message = message
+                if status == 400 and ('유효' in message or '만료' in message or '코드' in message):
+                    last_message = f'아직 유효하지 않은 코드: {message}'
+                else:
+                    last_message = message
         except Exception as e:
             last_message = f'오류: {e}'
             print(last_message)
