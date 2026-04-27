@@ -1,12 +1,7 @@
 # DataSchool Auto Check-in
 
 ## 1. 수정할 파일
-아래 두 파일만 먼저 수정하면 됩니다.
-
-- `attendance_session_based.py`
-- `mid_attendance.py`
-
-각 파일 상단에서 아래 두 줄을 직접 입력하세요.
+먼저 `config.py` 파일만 열어서 이름과 비밀번호를 입력하세요.
 
 ```python
 NAME = ''
@@ -46,8 +41,6 @@ PASSWORD = '1234'
 
 ## 4. 수동 실행
 직접 테스트하고 싶으면 아래 파일을 실행하면 됩니다.
-
-`check_tasks.bat`를 실행하면 현재 등록된 작업 정보를 확인할 수 있습니다.
 
 - `run_checkin.bat`
 - `run_mid_attendance.bat`

@@ -1,3 +1,3 @@
 @echo off
 cd /d %~dp0
-py -3 attendance_session_based.py --action in
+py -3 src\attendance.py --action in

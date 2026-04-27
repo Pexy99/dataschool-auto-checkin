@@ -12,12 +12,11 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-# ===== 사용자 설정 =====
-# 아래 두 값을 직접 입력하세요.
-NAME = ''
-PASSWORD = ''
-STR_CCODE = 'W260315002'
-# ======================
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+import config
 
 BASE = 'https://microsoft.atosoft.net/worknet/'
 SEARCH_URL = BASE + 'ajax_stu_search.asp'
@@ -29,7 +28,7 @@ PRESENT_OUT_URL = BASE + 'present/PresentOut_ok.asp'
 ROLLBOOK_URL = BASE + 'present/PresentRollBookChk.asp'
 SUMMARY_URL = BASE + '_popup/student/_stuPresentList.asp'
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36'
-SKIP_DATES_PATH = Path(__file__).with_name('skip_dates.txt')
+SKIP_DATES_PATH = ROOT / 'skip_dates.txt'
 
 
 def is_windows() -> bool:
@@ -118,12 +117,12 @@ def login(opener: urllib.request.OpenerDirector, name: str, str_code: str, passw
 
 def open_present_page(opener: urllib.request.OpenerDirector, str_code: str, name: str) -> str:
     encoded_name = encode_euckr_percent(name)
-    url = PRESENT_PAGE + '?' + f'strCode={str_code}&strCCode={STR_CCODE}&strName={encoded_name}'
+    url = PRESENT_PAGE + '?' + f'strCode={str_code}&strCCode={config.STR_CCODE}&strName={encoded_name}'
     return fetch_text(opener, url, headers={'Referer': BASE + f'SMember/index.asp?strCode={str_code}'})
 
 
 def get_rollbook(opener: urllib.request.OpenerDirector, str_code: str) -> tuple[str, str]:
-    query = urllib.parse.urlencode({'strCode': str_code, 'strCCode': STR_CCODE})
+    query = urllib.parse.urlencode({'strCode': str_code, 'strCCode': config.STR_CCODE})
     text = fetch_text(opener, ROLLBOOK_URL + '?' + query)
     parts = text.strip().split('|', 1)
     in_time = parts[0].strip() if parts and parts[0].strip() else ''
@@ -133,28 +132,14 @@ def get_rollbook(opener: urllib.request.OpenerDirector, str_code: str) -> tuple[
 
 def run_action(opener: urllib.request.OpenerDirector, action: str, str_code: str) -> str:
     url = PRESENT_IN_URL if action == 'in' else PRESENT_OUT_URL
-    query = urllib.parse.urlencode({'strCode': str_code, 'strCCode': STR_CCODE})
-    return fetch_text(opener, url + '?' + query, headers={'Referer': PRESENT_PAGE + f'?strCode={str_code}&strCCode={STR_CCODE}'})
+    query = urllib.parse.urlencode({'strCode': str_code, 'strCCode': config.STR_CCODE})
+    return fetch_text(opener, url + '?' + query, headers={'Referer': PRESENT_PAGE + f'?strCode={str_code}&strCCode={config.STR_CCODE}'})
 
 
-def fetch_attendance_summary(
-    opener: urllib.request.OpenerDirector,
-    str_code: str,
-    name: str,
-    start_day: str,
-    end_day: str,
-) -> tuple[str, str, str] | None:
-    params = urllib.parse.urlencode(
-        {
-            'strCCode': STR_CCODE,
-            'strCode': str_code,
-            'Sday1': start_day,
-            'Sday2': end_day,
-        }
-    )
+def fetch_attendance_summary(opener: urllib.request.OpenerDirector, str_code: str, name: str, start_day: str, end_day: str) -> tuple[str, str, str] | None:
+    params = urllib.parse.urlencode({'strCCode': config.STR_CCODE, 'strCode': str_code, 'Sday1': start_day, 'Sday2': end_day})
     html = fetch_text(opener, SUMMARY_URL + '?' + params)
     import re
-
     pattern = re.compile(
         rf'<td[^>]*>\s*<center>{re.escape(name)}</center>\s*</td>\s*'
         r'<td[^>]*>\s*<center>(\d+)</center>\s*</td>\s*'
@@ -172,24 +157,16 @@ def fetch_attendance_summary(
     return match.group(1), match.group(2), match.group(3)
 
 
-def build_friday_summary_message(
-    opener: urllib.request.OpenerDirector,
-    str_code: str,
-    base_message: str,
-) -> str:
+def build_friday_summary_message(opener: urllib.request.OpenerDirector, str_code: str, base_message: str) -> str:
     if dt.date.today().weekday() != 4:
         return base_message
     start_day = (dt.date.today() - dt.timedelta(days=4)).isoformat()
     end_day = dt.date.today().isoformat()
-    summary = fetch_attendance_summary(opener, str_code, NAME, start_day, end_day)
+    summary = fetch_attendance_summary(opener, str_code, config.NAME, start_day, end_day)
     if not summary:
         return base_message
     training_days, attendance_days, attendance_rate = summary
-    return (
-        base_message
-        + f'\n최근 5일 출결: 훈련일수 {training_days}일 / '
-        + f'출석일수 {attendance_days}일 / 출석률 {attendance_rate}%'
-    )
+    return base_message + f'\n최근 5일 출결: 훈련일수 {training_days}일 / 출석일수 {attendance_days}일 / 출석률 {attendance_rate}%'
 
 
 def finish(message: str, *, popup: bool) -> int:
@@ -205,24 +182,24 @@ def main() -> int:
     parser.add_argument('--no-popup', action='store_true')
     args = parser.parse_args()
 
-    if not NAME or not PASSWORD:
-        return finish('attendance_session_based.py 상단의 NAME, PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
+    if not config.NAME or not config.PASSWORD:
+        return finish('config.py의 NAME, PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
 
     today = today_local()
     if today in load_skip_dates():
         return finish(f'{today} 예외일이라 스킵', popup=not args.no_popup)
 
     opener = build_opener()
-    str_code = find_str_code(opener, NAME)
+    str_code = find_str_code(opener, config.NAME)
     print(f'str_code={str_code}')
 
     bootstrap_login_session(opener)
-    login_result = login(opener, NAME, str_code, PASSWORD)
+    login_result = login(opener, config.NAME, str_code, config.PASSWORD)
     login_failed = '로그인 실패' in login_result or '아이디 또는 비밀번호' in login_result
     if login_failed:
         return finish('로그인 실패', popup=not args.no_popup)
 
-    open_present_page(opener, str_code, NAME)
+    open_present_page(opener, str_code, config.NAME)
     before_in, before_out = get_rollbook(opener, str_code)
 
     if args.action == 'in' and before_in:

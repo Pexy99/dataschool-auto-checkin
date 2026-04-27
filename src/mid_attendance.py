@@ -10,15 +10,15 @@ import time
 import urllib.request
 from pathlib import Path
 
-# ===== 사용자 설정 =====
-# 아래 두 값을 직접 입력하세요.
-NAME = ''
-PASSWORD = ''
-# ======================
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+import config
 
 CODE_URL = 'https://msdataschool4.azurewebsites.net/api/code'
 ATTENDANCE_URL = 'https://msdataschool4.azurewebsites.net/api/attendance'
-SKIP_DATES_PATH = Path(__file__).with_name('skip_dates.txt')
+SKIP_DATES_PATH = ROOT / 'skip_dates.txt'
 POLL_SECONDS = 30
 DEFAULT_START_TIME = '15:30'
 DEFAULT_END_TIME = '16:30'
@@ -95,8 +95,8 @@ def main() -> int:
     parser.add_argument('--no-popup', action='store_true')
     args = parser.parse_args()
 
-    if not NAME or not PASSWORD:
-        return finish('mid_attendance.py 상단의 NAME, PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
+    if not config.NAME or not config.PASSWORD:
+        return finish('config.py의 NAME, PASSWORD를 먼저 입력하세요.', popup=not args.no_popup)
 
     today = today_local()
     if today.isoformat() in load_skip_dates():
@@ -121,7 +121,7 @@ def main() -> int:
             if not code:
                 last_message = '출석 코드를 가져오지 못했습니다.'
             else:
-                result = submit_attendance(NAME, PASSWORD, code)
+                result = submit_attendance(config.NAME, config.PASSWORD, code)
                 message = str(result.get('message', '')).strip() or str(result)
                 print(f'server_message={message}')
                 if '출석이 확인되었습니다' in message:
